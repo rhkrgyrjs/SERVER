@@ -106,6 +106,10 @@ public class ChatServer
 				try {SendObject.toClient_throws(ChatServer.users.get(key), toSend);}
 				catch (IOException e) {ChatServer.users.remove(key);}
 			}
+
+			System.out.println("접속중 유저 목록");
+			for (String key : keySet)
+				System.out.println(key);
 		}
 	}
 }
