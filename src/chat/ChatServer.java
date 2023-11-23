@@ -8,9 +8,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import Server.Start;
 import form.ChatForm;
 import socket.ReceiveObject;
 import socket.SendObject;
+import window.MainMonitor;
 
 
 public class ChatServer 
@@ -83,13 +85,16 @@ public class ChatServer
 		{
 			received = (ChatForm) ReceiveObject.fromClient(socket);
 			ChatServer.users.put(received.getId(), socket);
+			monitorRefresh();
 			sendAll(received);
 			while (true)
 			{
 				try {received = (ChatForm) ReceiveObject.fromClient_throws(socket);} 
 				catch (IOException e) 
 				{
+					Start.mainMonitor.showRequest("[접속 종료] " + received.getId() + "가 접속 종료함");
 					ChatServer.users.remove(received.getId());
+					monitorRefresh();
 					break;
 				}
 				sendAll(received);
@@ -100,16 +105,27 @@ public class ChatServer
 		private void sendAll(ChatForm toSend)
 		{
 			Set<String> keySet = ChatServer.users.keySet();
+
+			Start.mainMonitor.showChat("[" + toSend.getId() +" # "+ toSend.getNickName() +"]");
+			Start.mainMonitor.showChat(" >> " + toSend.getMsg());
+			Start.mainMonitor.showChat("");
 			
 			for (String key : keySet)
 			{
 				try {SendObject.toClient_throws(ChatServer.users.get(key), toSend);}
-				catch (IOException e) {ChatServer.users.remove(key);}
+				catch (IOException e) 
+				{
+					ChatServer.users.remove(key);
+					monitorRefresh();
+				}
 			}
-
-			System.out.println("접속중 유저 목록");
-			for (String key : keySet)
-				System.out.println(key);
+		}
+		
+		private void monitorRefresh()
+		{
+			Set<String> keySet = ChatServer.users.keySet();
+			Start.mainMonitor.setUserList(keySet);
+			
 		}
 	}
 }

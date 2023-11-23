@@ -6,6 +6,7 @@ import java.sql.*;
 
 import javax.imageio.ImageIO;
 
+import Server.Start;
 import chat.ChatServer;
 import form.LoginReplyForm;
 import form.LoginRequestForm;
@@ -17,6 +18,8 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 
 import socket.*;
+
+import window.MainMonitor;
 
 import db.Query;
 
@@ -104,33 +107,54 @@ public class LoginServer
 					{
 						if (result1.getString("pw").equals(received.getPw()))
 						{
-							toSend = new LoginReplyForm(1, true, "login succeed");
+							if (ChatServer.users.containsKey(received.getId()) == false)
+							{
+							toSend = new LoginReplyForm(1, true, "로그인 성공");
 							toSend.setId(result1.getString("id"));
 							toSend.setNickName(result1.getString("nickname"));
+							}
+							else
+							{
+								toSend = new LoginReplyForm(1, false, "로그인 실패");
+							}
 						}
-						else {toSend = new LoginReplyForm(1, false, "login failed");}
+						else {toSend = new LoginReplyForm(1, false, "로그인 실패");}
 					}
 					else
 					{
-						toSend = new LoginReplyForm(1, false, "login failed");
+						toSend = new LoginReplyForm(1, false, "로그인 실패");
 					}}
 					catch (SQLException e) {e.printStackTrace();}
 					Query.close();
+					// 모니터 리프레시  
+					String monitorMessage1 = "[로그인 요청] " + received.getId() + "가 로그인 요청함...    ";
+					if (toSend.getResult() == true)
+						monitorMessage1 += "성공";
+					else
+						monitorMessage1 += "실패";
+					Start.mainMonitor.showRequest(monitorMessage1);
 				break;
 				
 				case 2:
 					// 회원가입 요청일 때 -> DB에 넣고 요청 회신 
-					String[] parameters2 = {received.getId(), received.getPw(), received.getNickName(), received.getPhoneNumber(), received.getEmail(), received.getZipcode(), received.getPw()};
-					boolean result2 = Query.execute("INSERT INTO userinfo (id, pw, nickname, phonenumber, email, zipcode, used_pw)" + "VALUES (?, ?, ?, ?, ?, ?, ?)", 7, parameters2);
+					String[] parameters2 = {received.getId(), received.getPw(), received.getNickName(), received.getPhoneNumber(), received.getEmail(), received.getZipcode(), received.getPw(), received.getAddress()};
+					boolean result2 = Query.execute("INSERT INTO userinfo (id, pw, nickname, phonenumber, email, zipcode, used_pw, address)" + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 8, parameters2);
 					if (result2 == true) 
 					{
 						BufferedImage profile = Blob.toBufferedImage(received.getPicBlob());
 						File outputFile = new File("profile/" + received.getId() + ".jpg");
 						try{ImageIO.write(profile, "jpg", outputFile);} catch (IOException a) {a.printStackTrace();}
-						toSend = new LoginReplyForm(2, true, "Signup Success.");
+						toSend = new LoginReplyForm(2, true, "회원가입 성공");
 					}
-					else toSend = new LoginReplyForm(2, false, "Signup failed.");
+					else toSend = new LoginReplyForm(2, false, "회원가입 실패");
 					Query.close();
+					// 모니터 리프레시 
+					String monitorMessage2 = "[회원가입 요청] ID " + received.getId() + "로 회원가입 요청함...    ";
+					if (toSend.getResult() == true)
+						monitorMessage2 += "성공";
+					else
+						monitorMessage2 += "실패";
+					Start.mainMonitor.showRequest(monitorMessage2);
 				break;
 				
 				case 3:
@@ -139,11 +163,18 @@ public class LoginServer
 					ResultSet result3 = Query.getResultSet("SELECT id FROM userinfo WHERE id=?", 1, parameters3);
 					try 
 					{
-						if (result3.next()) toSend = new LoginReplyForm(3, false, "can't use ID");
-						else toSend = new LoginReplyForm(3, true, "can use ID");
+						if (result3.next()) toSend = new LoginReplyForm(3, false, "ID 사용 불가능");
+						else toSend = new LoginReplyForm(3, true, "ID 사용가능");
 					}
 					catch(SQLException e) {}
 					Query.close();
+					// 모니터 리프레시 
+					String monitorMessage3 = "[ID중복체크 요청] " + received.getId() + "가 사용 가능한지...    ";
+					if (toSend.getResult() == true)
+						monitorMessage3 += "사용가능";
+					else
+						monitorMessage3 += "사용불가";
+					Start.mainMonitor.showRequest(monitorMessage3);
 				break;
 				
 				case 4:
@@ -176,7 +207,7 @@ public class LoginServer
 					}
 					else
 					{
-						toSend = new LoginReplyForm(4, false, "wrong parameters");
+						toSend = new LoginReplyForm(4, false, "파라미터 갯수 안맞음");
 					}
 					result4 = Query.getLikeResultSet(sql, paraNum, parameters4);
 					try 
@@ -203,9 +234,16 @@ public class LoginServer
 							} else break;
 						} catch (SQLException e) {}
 					}
-					toSend = new LoginReplyForm(4, true, "address list returned");
+					toSend = new LoginReplyForm(4, true, "주소 리스트 리턴함");
 					toSend.setSearchResult(res);
 					Query.close();
+					// 모니터 리프레시 
+					String monitorMessage4 = "[우편번호 요청] " + received.getDo() + " " + received.getSi() + "의 우편번호 정보 요청...    ";
+					if (toSend.getResult() == true)
+						monitorMessage4 += "처리됨";
+					else
+						monitorMessage4 += "오류";
+					Start.mainMonitor.showRequest(monitorMessage4);
 				break;
 				
 				case 5:
@@ -218,11 +256,18 @@ public class LoginServer
 					ResultSet result6 = Query.getResultSet("SELECT id FROM userinfo WHERE id=? and phonenumber=? and zipcode=?" , 3, parameters6);
 					try 
 					{
-						if (result6.next()) toSend = new LoginReplyForm(6, true, "verification succeed");
-						else toSend = new LoginReplyForm(6, false, "verification failed");
+						if (result6.next()) toSend = new LoginReplyForm(6, true, "인증 성공");
+						else toSend = new LoginReplyForm(6, false, "인증 실패");
 					}
 					catch(SQLException e) {}
 					Query.close();
+					// 모니터 리프레시 
+					String monitorMessage6 = "[본인인증 요청] " + received.getId() + "가 본인인증 요청함...    ";
+					if (toSend.getResult() == true)
+						monitorMessage6 += "성공";
+					else
+						monitorMessage6 += "실패";
+					Start.mainMonitor.showRequest(monitorMessage6);
 				break;
 				
 				case 7:
@@ -245,19 +290,26 @@ public class LoginServer
 						String[] step_two = {received.getPw(), cur_pw, received.getId()};
 						boolean res_two = Query.execute("UPDATE userinfo SET pw=?, used_pw=? WHERE id=?", 3, step_two);
 						if (res_two == true)
-							toSend = new LoginReplyForm(7, true, "password have been updated");
+							toSend = new LoginReplyForm(7, true, "패스워드 변경됨");
 						else
-							toSend = new LoginReplyForm(7, false, "failed to change password");
+							toSend = new LoginReplyForm(7, false, "패스워드 변경 실패");
 					}
 					else
 					{
-						toSend = new LoginReplyForm(7, false, "failed to change password");
+						toSend = new LoginReplyForm(7, false, "패스워드 변경 실패");
 					}
 					Query.close();
+					// 모니터 리프레시 
+					String monitorMessage7 = "[PW변경 요청] " + received.getId() + "가 비밀번호 변경함...    ";
+					if (toSend.getResult() == true)
+						monitorMessage7 += "변경됨";
+					else
+						monitorMessage7 += "변경실패 ";
+					Start.mainMonitor.showRequest(monitorMessage7);
 				break;
 				
 				default:
-					toSend = new LoginReplyForm(0, false, "wrong request");
+					toSend = new LoginReplyForm(0, false, "잘못된 요청");
 				break;
 			}
 			SendObject.toClient(socket, toSend);
