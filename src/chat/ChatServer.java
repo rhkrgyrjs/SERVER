@@ -1,5 +1,12 @@
 package chat;
 
+/*
+ * 채팅 서버 : 유저의 동적인 요청(접속을 유지해야 하는 요청들)을 처리함.
+ * 채팅이나 게임의 상호작용 등임.
+ * 유저는 요청을 보낼 뿐이며, 자신의 요청이 잘 실행됐는지 여부는 리턴받지 않음. 
+ * 유저의 요청은 코드를 통해 분류되고 처리됨.
+ */
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -12,6 +19,7 @@ import Server.Start;
 import form.ChatForm;
 import socket.ReceiveObject;
 import socket.SendObject;
+import game.GameRoom;
 import window.MainMonitor;
 
 
@@ -20,8 +28,11 @@ public class ChatServer
 	// 채팅 서버 포트 하드코딩 
 	public static final int CHAT_PORT = 8011;
 	
-	// 유저id - 유저 소켓. 닫히면 로그아웃 된 것으로 판단함. 
+	// 접속중 유저 저장하는 set : 유저id - 유저 소켓. 닫히면 로그아웃 된 것으로 판단함. 
 	public static Map<String, Socket> users = Collections.synchronizedMap(new HashMap<String, Socket>());
+	
+	// 게임방 저장하는 set : 유저id - 게임방 객체. 유저 접속 종료시 게임방 있으면 없애는 루틴 필요. 
+	public static Map<String, GameRoom> games = Collections.synchronizedMap(new HashMap<String, GameRoom>());
 	
 	// 싱글톤 처리 
 	private ChatServer() {}
@@ -86,7 +97,7 @@ public class ChatServer
 			received = (ChatForm) ReceiveObject.fromClient(socket);
 			ChatServer.users.put(received.getId(), socket);
 			monitorRefresh();
-			sendAll(received);
+			// sendAll(received);
 			while (true)
 			{
 				try {received = (ChatForm) ReceiveObject.fromClient_throws(socket);} 
@@ -95,6 +106,14 @@ public class ChatServer
 					Start.mainMonitor.showRequest("[접속 종료] " + received.getId() + "가 접속 종료함");
 					ChatServer.users.remove(received.getId());
 					monitorRefresh();
+					if (ChatServer.games.containsKey(received.getId()) == true)
+					{
+						Start.mainMonitor.showRequest("[게임 종료] " + received.getId() + "가 호스팅하던 게임 종료됨");
+						// 진행중인 게임이 있는 유저가 나가면 패배 처리 필요함. 
+						ChatServer.games.remove(received.getId());
+					} else {}
+					//ChatForm off = new ChatForm("@ServerMain", received.getId(), received.getNickName(), "["+received.getNickName()+"] 님이 접속을 종료했습니다.");
+					//sendAll(off);
 					break;
 				}
 				sendAll(received);

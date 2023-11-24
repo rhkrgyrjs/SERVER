@@ -32,6 +32,7 @@ public class LoginRequestForm implements Serializable
 	private String zipcode_num = null;
 	private byte[] picBlob = null;
 	private String address = null;
+	private String roomName = null;
 	
 	
 	public void setReqType(int type) {this.reqType = type;}
@@ -47,6 +48,7 @@ public class LoginRequestForm implements Serializable
 	public void setZipNum(String zipNum) {this.zipcode_num = zipNum;}
 	public void setPicBlob(byte[] blob) {this.picBlob = blob;}
 	public void setAddress(String address) {this.address = address;}
+	public void setRoomName(String roomName) {this.roomName = roomName;}
 	
 	public int getReqType() {return this.reqType;}
 	public String getId() {return this.id;}
@@ -61,4 +63,5 @@ public class LoginRequestForm implements Serializable
 	public String getZipNum() {return this.zipcode_num;}
 	public byte[] getPicBlob() {return this.picBlob;}
 	public String getAddress() {return this.address;}
+	public String getRoomName() {return this.roomName;}
 }

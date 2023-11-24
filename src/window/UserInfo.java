@@ -12,6 +12,8 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import Server.Start;
+import chat.ChatServer;
 import db.Query;
 import hash.SHA256;
 import image.Blob;
@@ -208,6 +210,9 @@ public class UserInfo extends JFrame
 				try{ImageIO.write(this.bufim, "jpg", outputFile);} catch (IOException a) {a.printStackTrace();}
 			}
 		}
+		Start.mainMonitor.showRequest("[유저 정보 수정] " + id + "의 정보가 수정되었습니다.");
+		try {ChatServer.users.get(id).close();}
+		catch(IOException e) {}
 		return result;
 	}
 	
@@ -219,13 +224,16 @@ public class UserInfo extends JFrame
 		@Override
 		public void actionPerformed(ActionEvent e) 
 		{
-			boolean result = ui.updateUserinfo();
-			ui.clear();
-			ui.setVisible(false);
-			if (result == true)
-				ShowMessage.information("유저 정보 수정됨", "유저 정보가 수정되었습니다.");
-			else
-				ShowMessage.warning("유저 정보 수정 실패", "유저 정보 수정 중 오류가 발생했습니다.");
+			if (ShowMessage.confirm("유저 정보 수정", "유저의 정보를 수정하시겠습니까? 유저의 접속이 종료됩니다."));
+			{
+				boolean result = ui.updateUserinfo();
+				ui.clear();
+				ui.setVisible(false);
+				if (result == true)
+					ShowMessage.information("유저 정보 수정됨", "유저 정보가 수정되었습니다.");
+				else
+					ShowMessage.warning("유저 정보 수정 실패", "유저 정보 수정 중 오류가 발생했습니다.");
+			}
 		}
 	}
 

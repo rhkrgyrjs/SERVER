@@ -3,6 +3,7 @@ package login;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.sql.*;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 
@@ -10,6 +11,7 @@ import Server.Start;
 import chat.ChatServer;
 import form.LoginReplyForm;
 import form.LoginRequestForm;
+import game.GameRoom;
 import image.Blob;
 import image.PicResize;
 
@@ -24,12 +26,10 @@ import window.MainMonitor;
 import db.Query;
 
 /*
- * 로그인 서버 : 로그인 / 회원가입 관련 처리 함. 
- * 1. 로그인 요청 처리 : DB에 ID PW 조회해보고 맞으면 로그인, 아니면 실패. 
- * 2. 회원가입 요청 처리 : 유저가 전송한 정보를 DB에 저장.
- *  2.1. ID 중복체크 : DB에 ID가 존재하나 조회.
- *  2.2. 프로필 사진 전송받기 : 유저에게 사진 파일 전송받아 저장.
- *  2.3. 우편번호 찾기 : 우편번호 검색 결과를 유저에게 전송. 
+ * 로그인 서버 : 정적인 요청(서버-클라이언트 접속을 유지할 필요가 없는 요청들)을 처리함. 
+ * 각 요청의 종료는 요청 코드로 구분되며, 처리됨.
+ * 유저는 자신의 요청이 잘 실행되었는지 여부를 리턴받음.  
+ * 유저의 요청이 종료된 후에는 접속을 끊음. 
  */
 
 public class LoginServer 
@@ -247,7 +247,31 @@ public class LoginServer
 				break;
 				
 				case 5:
-					// 로그아웃 요청 
+					// -> 게임방 생성 요청 
+					// 만약 방장 이름으로 된 게임방이 없다면 -> 게임방 생성후 방 생성 성공 메시지 전송
+					// 만약 방장 이름으로 된 게임방이 있다면 -> 실패 메시지 전송 
+					if (ChatServer.games.containsKey(received.getId()) == false)
+					{
+						GameRoom newRoom = new GameRoom(received.getRoomName(), received.getId());
+						ChatServer.games.put(received.getId(), newRoom);
+						toSend = new LoginReplyForm(5, true, "게임방 생성됨");
+					}
+					else
+					{
+						toSend = new LoginReplyForm(5, false, "게임방 생성 실패");
+					}
+					String monitorMessage5 = "[방 생성 요청] " +received.getId() + "가 방 생성 요청... ";
+					if (toSend.getResult() == true)
+					{
+						monitorMessage5 += "성공";
+						Start.mainMonitor.showRequest(monitorMessage5);
+						Start.mainMonitor.showRequest("[게임방 생성] " + received.getId() + "가 " + received.getRoomName() + " 호스팅중");
+					}
+					else
+					{
+						monitorMessage5 += "실패";
+						Start.mainMonitor.showRequest(monitorMessage5);
+					}
 				break;
 				
 				case 6:
@@ -306,6 +330,29 @@ public class LoginServer
 					else
 						monitorMessage7 += "변경실패 ";
 					Start.mainMonitor.showRequest(monitorMessage7);
+				break;
+				
+				case 8:
+					// 유저가 로비 정보 요청할때 
+					String[][] lobInfo = null;
+					synchronized(ChatServer.games)
+					{
+						int i = 0;
+						Set<String> keySet = ChatServer.games.keySet();
+						lobInfo = new String[ChatServer.games.size()][3]; 
+						for (String key : keySet) 
+						{
+							lobInfo[i][0] = ChatServer.games.get(key).getRoomName();
+							lobInfo[i][1]= key;
+							if (ChatServer.games.get(key).getOnGame() == false)
+								lobInfo[i][2] = "대기중";
+							else
+								lobInfo[i][2] = "게임중";
+							i++;
+						}
+					}
+					toSend = new LoginReplyForm(8, true, "로비 리스트 리턴함");
+					toSend.setSearchResult(lobInfo);
 				break;
 				
 				default:

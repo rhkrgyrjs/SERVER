@@ -14,4 +14,12 @@ public class ShowMessage
 	{
 		JOptionPane.showMessageDialog(null, msg, title, JOptionPane.WARNING_MESSAGE);
 	}
+	
+	public static boolean confirm(String title, String msg)
+	{
+		if (JOptionPane.showConfirmDialog(null, msg, title,JOptionPane.YES_NO_OPTION) == JOptionPane.YES_NO_OPTION)
+			return true;
+		else
+			return false;
+	}
 }
