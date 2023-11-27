@@ -116,7 +116,19 @@ public class ChatServer
 					//sendAll(off);
 					break;
 				}
-				sendAll(received);
+				switch (received.getReqType())
+				{
+					case 1:
+						// 채팅 요청일 
+						sendAll(received);
+					break;
+				
+					case 2:
+						// 게임 관련 요청일 때 
+					break;
+				}
+				
+				
 			}
 		}
 		

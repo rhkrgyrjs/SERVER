@@ -10,6 +10,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import chat.ChatServer;
+import swing.ShowMessage;
 
 public class MainMonitor extends JFrame
 {
@@ -35,6 +36,7 @@ public class MainMonitor extends JFrame
 	private JScrollPane chatPane = null;
 	private JButton userInfoButton = null;
 	private JButton userKickButton = null;
+	private JButton userSearchButton = null;
 	
 	private String selectedUser = null;
 	
@@ -63,6 +65,7 @@ public class MainMonitor extends JFrame
 		chatPane = new JScrollPane(chatList);
 		userInfoButton = new JButton("유저정보");
 		userKickButton = new JButton("강퇴");
+		userSearchButton = new JButton("검색");
 		
 		userListLabel.setBounds(10, 10, 170, 20);
 		requestListLabel.setBounds(220, 10, 150, 20);
@@ -70,9 +73,9 @@ public class MainMonitor extends JFrame
 		userPane.setBounds(10, 40, 200, 270);
 		requestPane.setBounds(220 ,40, 400, 320);
 		chatPane.setBounds(650, 40, 530, 320);
-		userInfoButton.setBounds(30, 320, 60, 40);
-		userKickButton.setBounds(120, 320, 60, 40);
-		
+		userInfoButton.setBounds(75, 320, 60, 40);
+		userKickButton.setBounds(135, 320, 60, 40);
+		userSearchButton.setBounds(25, 320, 40, 40);	
 		userList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		requestList.setEditable(false);
 		chatList.setEditable(false);
@@ -80,6 +83,7 @@ public class MainMonitor extends JFrame
 		userList.addListSelectionListener(new UserClicked(this));
 		userInfoButton.addActionListener(new ShowUserInfo(this));
 		userKickButton.addActionListener(new KickUser(this));
+		userSearchButton.addActionListener(new SearchUser(this));
 		
 		add(userListLabel);
 		add(requestListLabel);
@@ -89,6 +93,7 @@ public class MainMonitor extends JFrame
 		add(chatPane);
 		add(userInfoButton);
 		add(userKickButton);
+		add(userSearchButton);
 		
 		// 창 닫을때 
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -153,6 +158,23 @@ public class MainMonitor extends JFrame
             }
 			}
 		}
+	}
+	
+	class SearchUser implements ActionListener
+	{
+		MainMonitor mm = null;
+		SearchUser(MainMonitor mm) {this.mm = mm;}
+
+		@Override
+		public void actionPerformed(ActionEvent e) 
+		{
+			String id = ShowMessage.input("유저 검색", "정보를 찾아볼 유저의 ID를 입력하세요.");
+			if (id!=null)
+			{
+				if (!(id.equals(""))) mm.infoWindow.loadUserInfo(id);
+			}
+		}
+		
 	}
 	
 	class ShowUserInfo implements ActionListener

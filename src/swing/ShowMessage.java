@@ -22,4 +22,10 @@ public class ShowMessage
 		else
 			return false;
 	}
+	
+	public static String input(String title, String msg)
+	{
+		String result = JOptionPane.showInputDialog(null, msg, title, JOptionPane.QUESTION_MESSAGE);
+		return result;
+	}
 }

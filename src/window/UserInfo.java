@@ -171,7 +171,7 @@ public class UserInfo extends JFrame
 		this.profilPicButton.setIcon(img);
 		this.setVisible(true);
 		}
-		catch (SQLException e) {System.out.println("오류!");}
+		catch (SQLException e) {ShowMessage.warning("오류", "유저의 정보를 찾을 수 없습니다.");}
 		Query.close();
 	}
 	
