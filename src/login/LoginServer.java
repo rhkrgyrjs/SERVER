@@ -1,6 +1,5 @@
 package login;
 
-import java.io.IOException;
 import java.net.ServerSocket;
 import java.sql.*;
 import java.util.Set;
@@ -13,7 +12,6 @@ import form.LoginReplyForm;
 import form.LoginRequestForm;
 import game.GameRoom;
 import image.Blob;
-import image.PicResize;
 
 import java.net.*;
 import java.awt.image.BufferedImage;
@@ -137,8 +135,8 @@ public class LoginServer
 				
 				case 2:
 					// 회원가입 요청일 때 -> DB에 넣고 요청 회신 
-					String[] parameters2 = {received.getId(), received.getPw(), received.getNickName(), received.getPhoneNumber(), received.getEmail(), received.getZipcode(), received.getPw(), received.getAddress()};
-					boolean result2 = Query.execute("INSERT INTO userinfo (id, pw, nickname, phonenumber, email, zipcode, used_pw, address)" + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 8, parameters2);
+					String[] parameters2 = {received.getId(), received.getPw(), received.getNickName(), received.getPhoneNumber(), received.getEmail(), received.getZipcode(), received.getPw(), received.getAddress(), "0", "0", "0", "1500"};
+					boolean result2 = Query.execute("INSERT INTO userinfo (id, pw, nickname, phonenumber, email, zipcode, used_pw, address, win, lose, draw, elo)" + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 12, parameters2);
 					if (result2 == true) 
 					{
 						BufferedImage profile = Blob.toBufferedImage(received.getPicBlob());
@@ -353,6 +351,80 @@ public class LoginServer
 					}
 					toSend = new LoginReplyForm(8, true, "로비 리스트 리턴함");
 					toSend.setSearchResult(lobInfo);
+					Start.mainMonitor.showRequest("[로비 조회] " + received.getId() + "가 로비 정보 조회함.");
+				break;
+				
+				case 9:
+					// 유저가 게임방 참가 요청할때 
+					// 게임방이 게임 진행중임(2명의 유저가 게임중임) -> 실패 메시지 반환
+					// 게임방이 게임 대기중임(방장이 같이 게임할 유저를 기다리고 있음) -> 성공 메시지 반환 
+					// 유저는 아이디, 닉네임, 참가할 방의 방장ID (방ID)를 리퀘스트 폼으로 전달함 
+					synchronized(ChatServer.games)
+					{
+						if (ChatServer.games.containsKey(received.getRoomName()) == true)
+						{
+							// 들어가고자 하는 방이 존재하는 경우 
+							if (ChatServer.games.get(received.getRoomName()).getOnGame() == false)
+							{
+								// 해당 방이 대기중인 경우 
+								ChatServer.games.get(received.getRoomName()).inviteAndStart(received.getId());
+								toSend = new LoginReplyForm(9, true, "게임방에 접속됨");
+							}
+							else
+							{
+								// 해당 방이 게임중인 경우 
+								toSend = new LoginReplyForm(9, false, "이미 게임중인 방임");
+							}
+						}
+						else
+						{
+							// 들어가고자 하는 방이 존재하지 않는 경우 
+							toSend = new LoginReplyForm(9, false, "게임 방이 더이상 존재하지 않음");
+						}
+					}
+					String monitorMessage9 = "[게임방 참가] " + received.getId() + "가" + received.getRoomName() + "방에 접속 시도,,, ";
+					if (toSend.getResult() == true)
+						monitorMessage9 += "입장 성공";
+					else
+						monitorMessage9 += "입장 실패";
+					Start.mainMonitor.showRequest(monitorMessage9);
+				break;
+				
+				case 10:
+					// 게임방 입장 시 또는 유저의 정보 조회할 떄 요청 
+					// 게임방 생성시 내 정보 요청해서 넣어놓기, 
+					// 게임방 들어갈 때 상대 정보/내 정보 요청해서 넣어놓기
+					// replyform의 특정 필드만 사용함. 
+					// 입력받은 아이디는 무조건 존재하는 유저라고 가정하고 짬. 
+					String[] parameters10 = {received.getId()};
+					ResultSet result10 = Query.getResultSet("SELECT id, nickname, win, lose, draw, elo FROM userinfo WHERE id=?", 1, parameters10);
+					try 
+					{
+						if (result10.next()) 
+							{
+								toSend = new LoginReplyForm(10, true, "유저의 정보 리턴함");
+								toSend.setId(result10.getString("id"));
+								toSend.setNickName(result10.getString("nickname"));
+								String[][] rating = new String[1][2];
+								rating[0][0] = result10.getString("win") + "승 " + result10.getString("draw") + "무 " + result10.getString("lose") + "패"; // 승무패
+								rating[0][1] = "elo Rating : " + result10.getString("elo"); // 레이팅 
+								toSend.setSearchResult(rating);
+								// 프사불러오기 
+								try 
+								{
+									BufferedImage bufim = ImageIO.read(new File("profile/" + toSend.getId() + ".jpg"));
+									toSend.setPicBlob(Blob.toByteArray(bufim, "jpg"));
+								} catch (IOException e) {}
+							}
+						else toSend = new LoginReplyForm(10, false, "유저의 정보를 찾을 수 없음");
+					}
+					catch(SQLException e) {}
+					String monitorMesage10 = "[유저정보 조회] " + received.getId() + "의 정보 조회 요청... ";
+					if (toSend.getResult() == true)
+						monitorMesage10 += "조회 성공";
+					else
+						monitorMesage10 += "조회 실패";
+					Start.mainMonitor.showRequest(monitorMesage10);
 				break;
 				
 				default:

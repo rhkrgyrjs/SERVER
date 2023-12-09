@@ -13,6 +13,7 @@ public class LoginReplyForm implements Serializable
 	private String[][] searchResult = null;
 	private String id = null;
 	private String nickName = null;
+	private byte[] picBlob = null;
 	
 	public LoginReplyForm(int type, boolean bool, String msg)
 	{
@@ -27,10 +28,12 @@ public class LoginReplyForm implements Serializable
 	public String[][] getSearchResult() {return this.searchResult;}
 	public String getId() {return this.id;}
 	public String getNickName() {return this.nickName;}
+	public byte[] getPicBlob() {return this.picBlob;}
 	
 	public void setSearchResult(String[][] res) {this.searchResult = res;}
 	public void setId(String id) {this.id = id;}
 	public void setNickName(String nickName) {this.nickName = nickName;}
+	public void setPicBlob(byte[] blob) {this.picBlob = blob;}
 
 }
  

@@ -212,7 +212,7 @@ public class UserInfo extends JFrame
 		}
 		Start.mainMonitor.showRequest("[유저 정보 수정] " + id + "의 정보가 수정되었습니다.");
 		try {ChatServer.users.get(id).close();}
-		catch(IOException e) {}
+		catch(Exception e) {}
 		return result;
 	}
 	

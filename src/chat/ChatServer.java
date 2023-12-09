@@ -106,25 +106,61 @@ public class ChatServer
 					Start.mainMonitor.showRequest("[접속 종료] " + received.getId() + "가 접속 종료함");
 					ChatServer.users.remove(received.getId());
 					monitorRefresh();
-					if (ChatServer.games.containsKey(received.getId()) == true)
+					/*if (ChatServer.games.containsKey(received.getId()) == true)
 					{
 						Start.mainMonitor.showRequest("[게임 종료] " + received.getId() + "가 호스팅하던 게임 종료됨");
 						// 진행중인 게임이 있는 유저가 나가면 패배 처리 필요함. 
 						ChatServer.games.remove(received.getId());
-					} else {}
+					} else {}*/
 					//ChatForm off = new ChatForm("@ServerMain", received.getId(), received.getNickName(), "["+received.getNickName()+"] 님이 접속을 종료했습니다.");
 					//sendAll(off);
+					if (received.getRoomId().equals("@ServerMain"))
+					{
+						// 게임중이지 않은 유저가 나갔을 때 
+					}
+					else
+					{
+						// 게임중인 유저가 나갔을 때 
+						Start.mainMonitor.showRequest("[탈주자 패배] " + received.getId() + " 탈주함");
+						Start.mainMonitor.showRequest("[게임 종료] " + received.getRoomId() + " 게임 종료됨");
+						if (ChatServer.games.containsKey(received.getRoomId()) == true)
+						{
+							ChatServer.games.get(received.getRoomId()).gameEnd(received.getId());
+							ChatServer.games.remove(received.getRoomId());
+						}
+						else
+						{
+							// 방이 없을떄? 
+						}
+					}
 					break;
 				}
 				switch (received.getReqType())
 				{
 					case 1:
-						// 채팅 요청일 
+						// 채팅 요청일 때 
 						sendAll(received);
 					break;
 				
 					case 2:
 						// 게임 관련 요청일 때 
+						if (received.getMsg().equals("flip"))
+						{
+							// 카드 펼치기 요청일 때 
+							ChatServer.games.get(received.getRoomId()).cardFlip(received.getId());
+						}
+						else if (received.getMsg().equals("ring"))
+						{
+							// 종 울리기 요청일 때 
+							ChatServer.games.get(received.getRoomId()).ringBell(received.getId());
+						}
+						// ChatServer.games.get(received.getRoomId()).broadCast("게임 보드 정보");
+						// broadCast 메시지 파라미터 수정해서 게임 로그 띄우기 
+						// 아니면 cardFlip, ringBell에 boradCast 합치기 
+					break;
+					
+					case 3:
+						// 유저가 방에 입장/퇴장 했음을 알아차리기 위해 얻는 더미 객체 받았을때.
 					break;
 				}
 				
