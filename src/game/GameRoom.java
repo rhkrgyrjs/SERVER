@@ -15,6 +15,7 @@ import javax.imageio.ImageIO;
 
 import chat.ChatServer;
 import db.Query;
+import elo.EloCalculator;
 import form.Card;
 import form.ChatForm;
 import form.GameBoardInfoForm;
@@ -166,7 +167,7 @@ public class GameRoom
 		catch (IOException e) {/*호스트 패배*/}
 		initGame();
 		broadCast("< 게임이 시작되었습니다! >");
-		broadCast("[" + hostId + "] 의 턴...");
+		broadCast("[" + hostId + "] 의 턴...\n");
 		System.out.println(this.roomName + "방, 방장이름 : " + this.hostId + "에" + this.guestId + "초대됨" );
 	}
 	
@@ -176,14 +177,15 @@ public class GameRoom
 		// 승자/패자 레이팅 계산후 업데이트 
 		// 승자/패자 알리고 게임 마무리
 		// 게임방 소멸시키기
+		this.onGame = false;
 		
 		// 전적 업데이트 
-		int hostWin;
-		int hostLose;
-		int hostElo;
-		int guestWin;
-		int guestLose;
-		int guestElo;
+		int hostWin = 0;
+		int hostLose = 0;
+		int hostElo = 0;
+		int guestWin = 0;
+		int guestLose = 0;
+		int guestElo = 0;
 		String[] hostIds = {hostId};
 		ResultSet hostRes = Query.getResultSet("SELECT win, lose, elo FROM userinfo WHERE id=?", 1, hostIds);
 		try 
@@ -217,6 +219,26 @@ public class GameRoom
 			// 호스트 승수 늘리기
 			// 게스트 패배수 늘리기 
 			// 호스트 elo, 게스트 elo 조정 
+			hostWin += 1;
+			guestLose += 1;
+			int newHostElo = EloCalculator.calc(hostElo, guestElo, "w");
+			int newGuestElo = EloCalculator.calc(guestElo, hostElo, "l");
+
+			String[] hostWinParam = {Integer.toString(hostWin), Integer.toString(newHostElo), hostId};
+			Query.execute("UPDATE userinfo SET win=?, elo=? WHERE id=?", 3, hostWinParam);
+			Query.close();
+			
+			String[] hostWinParam_1 = {Integer.toString(guestLose), Integer.toString(newGuestElo), guestId};
+			Query.execute("UPDATE userinfo SET lose=?, elo=? WHERE id=?", 3, hostWinParam_1);
+			Query.close();
+			
+			// 게임 끝났음을 알리는 메시지 전송
+			// 승자의 아이디 id 에 담아 전송함. 
+			ChatForm toSend = new ChatForm(4, hostId, hostId, "@Server", "게임 종료됨");
+			try {SendObject.toClient_throws(hostSocket, toSend);}
+			catch (IOException e) {}
+			try {SendObject.toClient_throws(guestSocket, toSend);}
+			catch (IOException e) {}
 		}
 		else if (loserId.equals(hostId))
 		{
@@ -224,7 +246,30 @@ public class GameRoom
 			// 게스트 승수 늘리기 
 			// 호스트 패배수 늘리기 
 			// 호스트 elo, 게스트 elo 조정 
+			guestWin += 1;
+			hostLose += 1;
+			int newGuestElo = EloCalculator.calc(guestElo, hostElo, "w");
+			int newHostElo = EloCalculator.calc(hostElo, guestElo, "l");
+			
+			String[] guestWinParam = {Integer.toString(guestWin), Integer.toString(newGuestElo), guestId};
+			Query.execute("UPDATE userinfo SET win=?, elo=? WHERE id=?", 3, guestWinParam);
+			Query.close();
+			
+			String[] hostWinParam_1 = {Integer.toString(hostLose), Integer.toString(newHostElo), hostId};
+			Query.execute("UPDATE userinfo SET lose=?, elo=? WHERE id=?", 3, hostWinParam_1);
+			Query.close();
+
+			// 게임 끝났음을 알리는 메시지 전송
+			// 승자의 아이디 id 에 담아 전송함. 
+			ChatForm toSend = new ChatForm(4, hostId, guestId, "@Server", "게임 종료됨");
+			try {SendObject.toClient_throws(hostSocket, toSend);}
+			catch (IOException e) {}
+			try {SendObject.toClient_throws(guestSocket, toSend);}
+			catch (IOException e) {}
 		}
+		
+		// 방 없애기. 
+		ChatServer.games.remove(hostId);
 		
 		// 테스트 
 		System.out.println("패자의 ID : " + loserId);
@@ -236,6 +281,60 @@ public class GameRoom
 		// 무승부 처리 함. 
 		// 두 유저의 elo 변동시키고, 무승부 수 하나씩 올리기. 
 		// 게임방 소멸시키기. 
+		int hostDraw = 0;
+		int guestDraw = 0;
+		int hostElo = 0;
+		int guestElo = 0;
+
+		String[] hostIds = {hostId};
+		ResultSet hostRes = Query.getResultSet("SELECT draw, elo FROM userinfo WHERE id=?", 1, hostIds);
+		try 
+		{
+			if (hostRes.next()) 
+				{
+					hostDraw = Integer.parseInt(hostRes.getString("draw"));
+					hostElo = Integer.parseInt(hostRes.getString("elo"));
+				}
+		}
+		catch(SQLException e) {}
+		Query.close();
+		
+		String[] guestIds = {guestId};
+		ResultSet guestRes = Query.getResultSet("SELECT draw, elo FROM userinfo WHERE id=?", 1, guestIds);
+		try 
+		{
+			if (guestRes.next()) 
+				{
+					guestDraw = Integer.parseInt(guestRes.getString("draw"));
+					guestElo = Integer.parseInt(guestRes.getString("elo"));
+				}
+		}
+		catch(SQLException e) {}
+		Query.close();
+		
+		guestDraw += 1;
+		hostDraw += 1;
+		
+		int newHostElo = EloCalculator.calc(hostElo, guestElo, "d");
+		int newGuestElo = EloCalculator.calc(guestElo, hostElo, "d");
+		
+		String[] hostParam = {Integer.toString(hostDraw), Integer.toString(newHostElo), hostId};
+		Query.execute("UPDATE userinfo SET draw=?, elo=? WHERE id=?", 3, hostParam);
+		Query.close();
+		
+		String[] guestParam = {Integer.toString(guestDraw), Integer.toString(newGuestElo), guestId};
+		Query.execute("UPDATE userinfo SET draw=?, elo=? WHERE id=?", 3, guestParam);
+		Query.close();
+		
+		ChatForm toSend = new ChatForm(4, hostId, "@Draw", "@Server", "게임 종료됨");
+		try {SendObject.toClient_throws(hostSocket, toSend);}
+		catch (IOException e) {}
+		try {SendObject.toClient_throws(guestSocket, toSend);}
+		catch (IOException e) {}
+		
+		// 방 없애기. 
+		ChatServer.games.remove(hostId);
+		
 	}
 	
 	public GameBoardInfoForm getBoardInfo()
@@ -286,7 +385,7 @@ public class GameRoom
 			}
 		}
 		// id 유저가 카드 펼침
-		if (id.equals(hostId) && (turn==true) && (bananaNum != 5) && (limeNum != 5) && (strawberryNum != 5) && (plumNum != 5))
+		if (id.equals(hostId) && (turn==true) && (bananaNum != 5) && (limeNum != 5) && (strawberryNum != 5) && (plumNum != 5) && (hostDeck.size() != 0))
 		{
 			// 호스트가 카드 펼쳤을 경우 
 			System.out.println("호스트가 카드 펼침 ");
@@ -383,10 +482,10 @@ public class GameRoom
 			}
 			turn = false;
 			broadCast("[" + id + "] 가 카드 펼침");
-			broadCast("[" + guestId + "] 의 턴...");
+			broadCast("[" + guestId + "] 의 턴...\n");
 			
 		}
-		else if (id.equals(guestId) && (turn==false) && (bananaNum != 5) && (limeNum != 5) && (strawberryNum != 5) && (plumNum != 5))
+		else if (id.equals(guestId) && (turn==false) && (bananaNum != 5) && (limeNum != 5) && (strawberryNum != 5) && (plumNum != 5) && (guestDeck.size() != 0))
 		{
 			// 게스트가 카드 펼쳤을 경우 
 			System.out.println("게스트가 카드 펼침 ");
@@ -482,7 +581,7 @@ public class GameRoom
 			}
 			turn = true;
 			broadCast("[" + id + "] 가 카드 펼침");
-			broadCast("[" + hostId + "] 의 턴...");
+			broadCast("[" + hostId + "] 의 턴...\n");
 		}
 	}
 	
@@ -525,7 +624,7 @@ public class GameRoom
 				turn = true;
 				broadCast("[" + id + "] 가 종 울림");
 				broadCast("[" + id + "] 가 카드 가져감");
-				broadCast("[" + hostId + "] 의 턴...");
+				broadCast("[" + hostId + "] 의 턴...\n");
 			}
 			else
 			{
@@ -588,7 +687,7 @@ public class GameRoom
 				turn = false;
 				broadCast("[" + id + "] 가 종 울림");
 				broadCast("[" + guestId + "]가 카드 가져감");
-				broadCast("[" +	guestId + "] 의 턴...");
+				broadCast("[" +	guestId + "] 의 턴...\n");
 			}
 			else
 			{
@@ -617,7 +716,7 @@ public class GameRoom
 				turn = false;
 				broadCast("[" + id + "] 가 종 울림");
 				broadCast("[" + hostId + "]가 카드 가져감");
-				broadCast("[" + guestId + "] 의 턴...");
+				broadCast("[" + guestId + "] 의 턴...\n");
 			}
 			System.out.println("게스트가 종 울림 ");
 		}

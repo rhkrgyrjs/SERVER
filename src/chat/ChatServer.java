@@ -125,8 +125,11 @@ public class ChatServer
 						Start.mainMonitor.showRequest("[게임 종료] " + received.getRoomId() + " 게임 종료됨");
 						if (ChatServer.games.containsKey(received.getRoomId()) == true)
 						{
-							ChatServer.games.get(received.getRoomId()).gameEnd(received.getId());
-							ChatServer.games.remove(received.getRoomId());
+							if (ChatServer.games.get(received.getRoomId()).getOnGame() == true)
+							{
+								ChatServer.games.get(received.getRoomId()).gameEnd(received.getId());
+								ChatServer.games.remove(received.getRoomId());
+							}
 						}
 						else
 						{
