@@ -121,13 +121,15 @@ public class ChatServer
 					else
 					{
 						// 게임중인 유저가 나갔을 때 
-						Start.mainMonitor.showRequest("[탈주자 패배] " + received.getId() + " 탈주함");
-						Start.mainMonitor.showRequest("[게임 종료] " + received.getRoomId() + " 게임 종료됨");
 						if (ChatServer.games.containsKey(received.getRoomId()) == true)
 						{
 							if (ChatServer.games.get(received.getRoomId()).getOnGame() == true)
 							{
 								ChatServer.games.get(received.getRoomId()).gameEnd(received.getId());
+								ChatServer.games.remove(received.getRoomId());
+							}
+							else
+							{
 								ChatServer.games.remove(received.getRoomId());
 							}
 						}

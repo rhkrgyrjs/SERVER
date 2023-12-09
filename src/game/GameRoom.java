@@ -481,6 +481,25 @@ public class GameRoom
 				break;
 			}
 			turn = false;
+			if (isGameEnd())
+			{
+				// 게임 끝났을때 루틴 짜기.
+				if ((turn == true) && (ringCount == true))
+				{
+					// 호스트 패배 
+					gameEnd(hostId);
+				}
+				else if (turn == false && (ringCount == true))
+				{
+					// 게스트 패배 
+					gameEnd(guestId);
+				}
+				else if (ringCount == false)
+				{
+					// 둘 중 아무도 카드를 가져가지 못한 경우 (과일 5개가 한번도 안 나왔을때) 무승부 처리. 
+					gameEndDraw();
+				}
+			}
 			broadCast("[" + id + "] 가 카드 펼침");
 			broadCast("[" + guestId + "] 의 턴...\n");
 			
@@ -580,6 +599,25 @@ public class GameRoom
 				break;
 			}
 			turn = true;
+			if (isGameEnd())
+			{
+				// 게임 끝났을때 루틴 짜기.
+				if ((turn == true) && (ringCount == true))
+				{
+					// 호스트 패배 
+					gameEnd(hostId);
+				}
+				else if (turn == false && (ringCount == true))
+				{
+					// 게스트 패배 
+					gameEnd(guestId);
+				}
+				else if (ringCount == false)
+				{
+					// 둘 중 아무도 카드를 가져가지 못한 경우 (과일 5개가 한번도 안 나왔을때) 무승부 처리. 
+					gameEndDraw();
+				}
+			}
 			broadCast("[" + id + "] 가 카드 펼침");
 			broadCast("[" + hostId + "] 의 턴...\n");
 		}

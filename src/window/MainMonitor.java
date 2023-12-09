@@ -37,12 +37,15 @@ public class MainMonitor extends JFrame
 	private JButton userInfoButton = null;
 	private JButton userKickButton = null;
 	private JButton userSearchButton = null;
+	private JButton userDBButton = null;
 	
 	private String selectedUser = null;
 	
 	private UserInfo infoWindow = null;
+	private UserDBWindow userDBWindow = null;
 	
 	public void setInfoWindow(UserInfo infoWindow) {this.infoWindow = infoWindow;}
+	public void setUserDBWindow(UserDBWindow udbw) {this.userDBWindow = udbw;}
 	
 	private MainMonitor()
 	{
@@ -66,6 +69,7 @@ public class MainMonitor extends JFrame
 		userInfoButton = new JButton("유저정보");
 		userKickButton = new JButton("강퇴");
 		userSearchButton = new JButton("검색");
+		userDBButton = new JButton("유저 DB");
 		
 		userListLabel.setBounds(10, 10, 170, 20);
 		requestListLabel.setBounds(220, 10, 150, 20);
@@ -76,6 +80,7 @@ public class MainMonitor extends JFrame
 		userInfoButton.setBounds(75, 320, 60, 40);
 		userKickButton.setBounds(135, 320, 60, 40);
 		userSearchButton.setBounds(25, 320, 40, 40);	
+		userDBButton.setBounds(130, 6, 80, 30);
 		userList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		requestList.setEditable(false);
 		chatList.setEditable(false);
@@ -84,6 +89,7 @@ public class MainMonitor extends JFrame
 		userInfoButton.addActionListener(new ShowUserInfo(this));
 		userKickButton.addActionListener(new KickUser(this));
 		userSearchButton.addActionListener(new SearchUser(this));
+		userDBButton.addActionListener(new ShowUserDB(this));
 		
 		add(userListLabel);
 		add(requestListLabel);
@@ -94,6 +100,7 @@ public class MainMonitor extends JFrame
 		add(userInfoButton);
 		add(userKickButton);
 		add(userSearchButton);
+		add(userDBButton);
 		
 		// 창 닫을때 
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -213,5 +220,18 @@ public class MainMonitor extends JFrame
 				catch (IOException a) {}
 			}
 		}
+	}
+	
+	class ShowUserDB implements ActionListener
+	{
+		MainMonitor mm = null;
+		ShowUserDB(MainMonitor mm) {this.mm = mm;}
+
+		@Override
+		public void actionPerformed(ActionEvent e) 
+		{
+			mm.userDBWindow.setVisible(true);
+		}
+		
 	}
 }

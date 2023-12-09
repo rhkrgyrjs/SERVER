@@ -43,12 +43,20 @@ public class UserInfo extends JFrame
 	private JLabel addressLabel = null;
 	private JLabel userIdLabel = null;
 	private JLabel zipcodeLabel = null;
+	private JLabel winLabel = null;
+	private JLabel loseLabel = null;
+	private JLabel drawLabel = null;
+	private JLabel eloLabel = null;
 	private JTextField nickNameInput = null;
 	private JTextField pwInput = null;
 	private JTextField emailInput = null;
 	private JTextField phoneNumInput = null;
 	private JTextField addressInput = null;
 	private JButton profilPicButton = null;
+	private JTextField winInput = null;
+	private JTextField loseInput = null;
+	private JTextField drawInput = null;
+	private JTextField eloInput = null;
 	JTextField zipcodeInput = null;
 	private JButton updateButton = null;
 	JButton cancelButton = null;
@@ -74,7 +82,7 @@ public class UserInfo extends JFrame
 		// 기본적인 창 설정 
 		setTitle("유저 정보 조회/수정");
 		setResizable(false);
-		setSize(375, 260);
+		setSize(375, 320);
 		setLayout(null);
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -87,6 +95,10 @@ public class UserInfo extends JFrame
 		phoneNumLabel = new JLabel("전화번호");
 		addressLabel = new JLabel("상세주소");
 		zipcodeLabel = new JLabel("우편번호");
+		winLabel = new JLabel("승");
+		loseLabel = new JLabel("패");
+		drawLabel = new JLabel("무");
+		eloLabel = new JLabel("레이팅");
 		
 		userIdLabel = new JLabel("");
 		nickNameInput = new JTextField();
@@ -94,6 +106,10 @@ public class UserInfo extends JFrame
 		emailInput = new JTextField();
 		phoneNumInput = new JTextField();
 		addressInput = new JTextField();
+		winInput = new JTextField();
+		loseInput = new JTextField();
+		drawInput = new JTextField();
+		eloInput = new JTextField();
 		
 		profilPicButton = new JButton();
 		zipcodeInput = new JTextField();
@@ -108,6 +124,10 @@ public class UserInfo extends JFrame
 		phoneNumLabel.setBounds(15, 135, 50, 20);
 		addressLabel.setBounds(15, 165, 50, 20);
 		zipcodeLabel.setBounds(295, 160, 50, 20);
+		winLabel.setBounds(132, 195, 30, 20);
+		loseLabel.setBounds(202, 195, 30, 20);
+		drawLabel.setBounds(270, 195, 30, 20);
+		eloLabel.setBounds(120, 225, 40, 20);
 		
 		userIdLabel.setBounds(70, 15, 200, 20);
 		nickNameInput.setBounds(70, 45, 200, 20);
@@ -115,11 +135,15 @@ public class UserInfo extends JFrame
 		emailInput.setBounds(70, 105, 200, 20);
 		phoneNumInput.setBounds(70, 135, 200, 20);
 		addressInput.setBounds(70, 165, 200, 20);
+		winInput.setBounds(80, 195, 50, 20);
+		loseInput.setBounds(150, 195, 50, 20);
+		drawInput.setBounds(218, 195, 50, 20);
+		eloInput.setBounds(162, 225, 70, 20);
 		
 		profilPicButton.setBounds(280, 45, 80, 92);
 		zipcodeInput.setBounds(280, 140, 80, 20);
-		updateButton.setBounds(100, 200, 80, 25);
-		cancelButton.setBounds(200, 200, 80, 25);
+		updateButton.setBounds(100, 260, 80, 25);
+		cancelButton.setBounds(200, 260, 80, 25);
 
 		picChooser.setFileFilter(new FileNameExtensionFilter("jpg", "jpg"));
 		picChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -135,6 +159,10 @@ public class UserInfo extends JFrame
 		add(phoneNumLabel);
 		add(addressLabel);
 		add(zipcodeLabel);
+		add(winLabel);
+		add(loseLabel);
+		add(drawLabel);
+		add(eloLabel);
 		
 		add(userIdLabel);
 		add(nickNameInput);
@@ -142,6 +170,10 @@ public class UserInfo extends JFrame
 		add(emailInput);
 		add(phoneNumInput);
 		add(addressInput);
+		add(winInput);
+		add(loseInput);
+		add(drawInput);
+		add(eloInput);
 		
 		add(profilPicButton);
 		add(zipcodeInput);
@@ -154,22 +186,26 @@ public class UserInfo extends JFrame
 	public void loadUserInfo(String id)
 	{
 		// 유저정보 로딩해오기.
-		String sql = "SELECT id, nickname, email, phonenumber, address, zipcode FROM userinfo WHERE id=?";
+		String sql = "SELECT id, nickname, email, phonenumber, address, zipcode, win, lose, draw, elo FROM userinfo WHERE id=?";
 		String[] parameter = {id};
 		ResultSet info = Query.getResultSet(sql, 1, parameter);
 		try
 		{
-		info.next();
-		this.userIdLabel.setText(info.getString("id"));
-		this.nickNameInput.setText(info.getString("nickname"));
-		this.emailInput.setText(info.getString("email"));
-		this.phoneNumInput.setText(info.getString("phonenumber"));
-		this.addressInput.setText(info.getString("address"));
-		this.zipcodeInput.setText(info.getString("zipcode"));
-		BufferedImage imgb = PicResize.getProfilePic("profile/" + info.getString("id") + ".jpg");
-		ImageIcon img = new ImageIcon(imgb);
-		this.profilPicButton.setIcon(img);
-		this.setVisible(true);
+			info.next();
+			this.userIdLabel.setText(info.getString("id"));
+			this.nickNameInput.setText(info.getString("nickname"));
+			this.emailInput.setText(info.getString("email"));
+			this.phoneNumInput.setText(info.getString("phonenumber"));
+			this.addressInput.setText(info.getString("address"));
+			this.zipcodeInput.setText(info.getString("zipcode"));
+			this.winInput.setText(info.getString("win"));
+			this.loseInput.setText(info.getString("lose"));
+			this.drawInput.setText(info.getString("draw"));
+			this.eloInput.setText(info.getString("elo"));
+			BufferedImage imgb = PicResize.getProfilePic("profile/" + info.getString("id") + ".jpg");
+			ImageIcon img = new ImageIcon(imgb);
+			this.profilPicButton.setIcon(img);
+			this.setVisible(true);
 		}
 		catch (SQLException e) {ShowMessage.warning("오류", "유저의 정보를 찾을 수 없습니다.");}
 		Query.close();
@@ -184,22 +220,26 @@ public class UserInfo extends JFrame
 		String phoneNum = this.phoneNumInput.getText();
 		String address = this.addressInput.getText();
 		String zipcode = this.zipcodeInput.getText();
+		String win = this.winInput.getText();
+		String lose = this.loseInput.getText();
+		String draw = this.drawInput.getText();
+		String elo = this.eloInput.getText();
 
 		boolean result = false;
 		if (password == null || password.equals(""))
 		{
 			// pw 따로 입력 안했을 경우 
-			String[] param1 = {nickName, email, phoneNum, address, zipcode, id};
-			String sql1 = "UPDATE userinfo SET nickname=?, email=?, phonenumber=?, address=?, zipcode=? WHERE id=?";
-			result = Query.execute(sql1, 6, param1);
+			String[] param1 = {nickName, email, phoneNum, address, zipcode, win, lose, draw, elo, id};
+			String sql1 = "UPDATE userinfo SET nickname=?, email=?, phonenumber=?, address=?, zipcode=?, win=?, lose=?, draw=?, elo=? WHERE id=?";
+			result = Query.execute(sql1, 10, param1);
 		}
 		else
 		{
 			// pw 따로 입력했을 경우 
 			String hashed = SHA256.toString(password);
-			String[] param2 = {hashed, nickName, email, phoneNum, address, zipcode, id};
-			String sql2 = "UPDATE userinfo SET pw=?, nickname=?, email=?, phonenumber=?, address=?, zipcode=? WHERE id=?";
-			result = Query.execute(sql2, 7, param2);
+			String[] param2 = {hashed, nickName, email, phoneNum, address, zipcode, win, lose, draw, elo, id};
+			String sql2 = "UPDATE userinfo SET pw=?, nickname=?, email=?, phonenumber=?, address=?, zipcode=?, win=?, lose=?, draw=?, elo=? WHERE id=?";
+			result = Query.execute(sql2, 11, param2);
 		}
 		Query.close();
 		if (result == true)

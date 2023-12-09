@@ -397,7 +397,7 @@ public class LoginServer
 					// replyform의 특정 필드만 사용함. 
 					// 입력받은 아이디는 무조건 존재하는 유저라고 가정하고 짬. 
 					String[] parameters10 = {received.getId()};
-					ResultSet result10 = Query.getResultSet("SELECT id, nickname, win, lose, draw, elo FROM userinfo WHERE id=?", 1, parameters10);
+					ResultSet result10 = Query.getResultSet("SELECT id, nickname, win, lose, draw, elo, email, phonenumber FROM userinfo WHERE id=?", 1, parameters10);
 					try 
 					{
 						if (result10.next()) 
@@ -405,9 +405,11 @@ public class LoginServer
 								toSend = new LoginReplyForm(10, true, "유저의 정보 리턴함");
 								toSend.setId(result10.getString("id"));
 								toSend.setNickName(result10.getString("nickname"));
-								String[][] rating = new String[1][2];
+								String[][] rating = new String[1][4];
 								rating[0][0] = result10.getString("win") + "승 " + result10.getString("draw") + "무 " + result10.getString("lose") + "패"; // 승무패
 								rating[0][1] = "elo Rating : " + result10.getString("elo"); // 레이팅 
+								rating[0][2] = result10.getString("phonenumber"); // 전번 
+								rating[0][3] = result10.getString("email"); // 이메일 
 								toSend.setSearchResult(rating);
 								// 프사불러오기 
 								try 
