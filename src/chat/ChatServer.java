@@ -176,6 +176,17 @@ public class ChatServer
 					case 3:
 						// 유저가 방에 입장/퇴장 했음을 알아차리기 위해 얻는 더미 객체 받았을때.
 					break;
+					
+					case 4:
+						// 유저가 관전 그만하려고 할 때 
+						if (ChatServer.games.containsKey(received.getRoomId()) == true)
+						{
+							if (ChatServer.games.get(received.getRoomId()).spectors.containsKey(received.getId()) == true)
+							{
+								ChatServer.games.get(received.getRoomId()).spectors.remove(received.getId());
+							}
+						}
+					break;
 				}
 				
 				
