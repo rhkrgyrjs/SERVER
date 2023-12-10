@@ -467,7 +467,7 @@ public class LoginServer
 					if ((ChatServer.games.containsKey(received.getRoomName()) == true) && (ChatServer.games.get(received.getRoomName()).getOnGame() == true))
 					{
 						// 관전자 입장 
-						ChatServer.games.get(received.getRoomName()).spectors.put(received.getId(), ChatServer.users.get(received.getId()));
+						ChatServer.games.get(received.getRoomName()).inviteSpector(received.getId());
 						toSend = new LoginReplyForm(13, true, "관전 시작됨");
 						toSend.setId(ChatServer.games.get(received.getRoomName()).getGuestId());
 					}

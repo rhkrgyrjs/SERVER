@@ -181,6 +181,7 @@ public class GameRoom
 	public void inviteSpector(String id)
 	{
 		spectors.put(id, ChatServer.users.get(id));
+		broadCast("< "+ id + " 관전 중.. >\n\n");
 	}
 	
 	public void gameEnd(String loserId)
