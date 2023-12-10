@@ -429,6 +429,55 @@ public class LoginServer
 					Start.mainMonitor.showRequest(monitorMesage10);
 				break;
 				
+				case 11:
+					// 유저가 레이팅 정보 요청할 경우 
+					String[] parameters11 = {};
+					ResultSet result11 = Query.getResultSet("SELECT id, elo FROM userinfo ORDER BY elo DESC", 0, parameters11);
+					try 
+					{
+						if (result11.next()) 
+							{
+								toSend = new LoginReplyForm(11, true, "레이팅 정보 리턴함");
+
+								result11.last();
+								String[][] ratings= new String[result11.getRow()][1];
+								result11.beforeFirst(); 
+								for (int i=0; i<ratings.length; i++)
+								{
+									result11.next();
+									ratings[i][0] = "elo " + result11.getString("elo") + "  [" + result11.getString("id") + "]";
+								}
+								toSend.setSearchResult(ratings);
+							}
+						else toSend = new LoginReplyForm(11, false, "레이팅 정보를 불러올 수 없음.");
+					}
+					catch(SQLException e) {}
+				break;
+				
+				case 12:
+					// 방 닫기. 
+					if (ChatServer.games.containsKey(received.getRoomName()))
+						ChatServer.games.remove(received.getRoomName());
+					toSend = new LoginReplyForm(12, true, "요청 처리함");
+				break;
+				
+				case 13:
+					// 유저가 관전자로 방에 들어가려고 하는 경우 -> 방의 id를 받음. 게스트의 id를 id필드에 넣어 전달함. 
+					// 방이 아직 게임중이 아니거나 없어진 방이면 요청 실패. 
+					if ((ChatServer.games.containsKey(received.getRoomName()) == true) && (ChatServer.games.get(received.getRoomName()).getOnGame() == true))
+					{
+						// 관전자 입장 
+						ChatServer.games.get(received.getRoomName()).spectors.put(received.getId(), ChatServer.users.get(received.getId()));
+						toSend = new LoginReplyForm(13, true, "관전 시작됨");
+						toSend.setId(ChatServer.games.get(received.getRoomName()).getGuestId());
+					}
+					else
+					{
+						// 관전자 입장 실패 
+						toSend = new LoginReplyForm(13, false, "관전 입장 실패");
+					}
+				break;
+				
 				default:
 					toSend = new LoginReplyForm(0, false, "잘못된 요청");
 				break;

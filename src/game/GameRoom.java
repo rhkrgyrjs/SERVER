@@ -8,11 +8,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 
+import Server.Start;
 import chat.ChatServer;
 import db.Query;
 import elo.EloCalculator;
@@ -32,6 +36,9 @@ public class GameRoom
 	private String roomName = null;
 	private String hostId = null;
 	private String guestId = null;
+	
+	// 관전자의 소켓 저장
+	public Map<String, Socket> spectors = Collections.synchronizedMap(new HashMap<String, Socket>());
 	
 	// 누구의 턴인지? -> true : 호스트 턴, false : 게스트 턴 
 	private boolean turn = true;
@@ -171,6 +178,11 @@ public class GameRoom
 		System.out.println(this.roomName + "방, 방장이름 : " + this.hostId + "에" + this.guestId + "초대됨" );
 	}
 	
+	public void inviteSpector(String id)
+	{
+		spectors.put(id, ChatServer.users.get(id));
+	}
+	
 	public void gameEnd(String loserId)
 	{
 		// 패자의 id 인자로 받기 
@@ -234,11 +246,13 @@ public class GameRoom
 			
 			// 게임 끝났음을 알리는 메시지 전송
 			// 승자의 아이디 id 에 담아 전송함. 
-			ChatForm toSend = new ChatForm(4, hostId, hostId, "@Server", "게임 종료됨");
+			ChatForm toSend = new ChatForm(4, hostId, hostId, "@Server", hostId + "승리");
 			try {SendObject.toClient_throws(hostSocket, toSend);}
 			catch (IOException e) {}
 			try {SendObject.toClient_throws(guestSocket, toSend);}
 			catch (IOException e) {}
+			ChatForm toSend_spec = new ChatForm(6, hostId, hostId, "@Server", hostId + "승리");
+			sendAll(toSend_spec);
 		}
 		else if (loserId.equals(hostId))
 		{
@@ -261,11 +275,13 @@ public class GameRoom
 
 			// 게임 끝났음을 알리는 메시지 전송
 			// 승자의 아이디 id 에 담아 전송함. 
-			ChatForm toSend = new ChatForm(4, hostId, guestId, "@Server", "게임 종료됨");
+			ChatForm toSend = new ChatForm(4, hostId, guestId, "@Server", guestId + "승리");
 			try {SendObject.toClient_throws(hostSocket, toSend);}
 			catch (IOException e) {}
 			try {SendObject.toClient_throws(guestSocket, toSend);}
 			catch (IOException e) {}
+			ChatForm toSend_spec = new ChatForm(6, hostId, guestId, "@Server", guestId + "승리");
+			sendAll(toSend_spec);
 		}
 		
 		// 방 없애기. 
@@ -326,11 +342,13 @@ public class GameRoom
 		Query.execute("UPDATE userinfo SET draw=?, elo=? WHERE id=?", 3, guestParam);
 		Query.close();
 		
-		ChatForm toSend = new ChatForm(4, hostId, "@Draw", "@Server", "게임 종료됨");
+		ChatForm toSend = new ChatForm(4, hostId, "@Draw", "@Server", "무승부");
 		try {SendObject.toClient_throws(hostSocket, toSend);}
 		catch (IOException e) {}
 		try {SendObject.toClient_throws(guestSocket, toSend);}
 		catch (IOException e) {}
+		ChatForm toSend_spec = new ChatForm(6, hostId, "@Draw", "@Server", "무승부");
+		sendAll(toSend_spec);
 		
 		// 방 없애기. 
 		ChatServer.games.remove(hostId);
@@ -344,6 +362,21 @@ public class GameRoom
 		GameBoardInfoForm result = new GameBoardInfoForm(A, B, C, D, hostDeckCount, guestDeckCount);
 		// 게임 승패 판별해서 게임 끝났는지 판별하자. 
 		return result;
+	}
+	
+
+	private void sendAll(ChatForm toSend)
+	{
+		Set<String> keySet = spectors.keySet();
+		
+		for (String key : keySet)
+		{
+			try {SendObject.toClient_throws(spectors.get(key), toSend);}
+			catch (IOException e) 
+			{
+				spectors.remove(key);
+			}
+		}
 	}
 	
 	// 게임이 끝났는지 판별하는 함수.
@@ -789,9 +822,13 @@ public class GameRoom
 		try {SendObject.toClient_throws(guestSocket, toSend);}
 		catch (IOException e) {/*게스트 패배*/}
 		// 관전자에게 보내는 루틴도 추가하자. 
+		ChatForm toSend_spec = new ChatForm(5, hostId, "@Server", "@Server", msg);
+		toSend_spec.setBoardInfo(getBoardInfo());
+		sendAll(toSend_spec);
 	}
 	
 	public String getHostId() {return this.hostId;}
+	public String getGuestId() {return this.guestId;}
 	public String getRoomName() {return this.roomName;}
 	public boolean getOnGame() {return this.onGame;}
 	

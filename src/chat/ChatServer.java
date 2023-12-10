@@ -125,8 +125,17 @@ public class ChatServer
 						{
 							if (ChatServer.games.get(received.getRoomId()).getOnGame() == true)
 							{
-								ChatServer.games.get(received.getRoomId()).gameEnd(received.getId());
-								ChatServer.games.remove(received.getRoomId());
+								if (ChatServer.games.get(received.getRoomId()).getHostId().equals(received.getId()) || ChatServer.games.get(received.getRoomId()).getGuestId().equals(received.getId()))
+								{
+									// 게임중인 유저중 한 명이 나감 
+									ChatServer.games.get(received.getRoomId()).gameEnd(received.getId());
+									ChatServer.games.remove(received.getRoomId());
+								}
+								else
+								{
+									//관전자가 나감. 관전자 제거하기.
+									ChatServer.games.get(received.getRoomId()).spectors.remove(received.getId());
+								}
 							}
 							else
 							{
