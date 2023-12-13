@@ -53,6 +53,9 @@ public class GameRoom
 	
 	private boolean ringCount = false;
 	
+	// 유저의 명령 저장. ring : 벨울리기, flip : 카드펼치기. 
+	public String command = null;
+	
 	// 펼쳐진 카드 
 	private Card A = null;
 	private Card B = null;
@@ -362,6 +365,7 @@ public class GameRoom
 		guestDeckCount = guestDeck.size();
 		GameBoardInfoForm result = new GameBoardInfoForm(A, B, C, D, hostDeckCount, guestDeckCount);
 		// 게임 승패 판별해서 게임 끝났는지 판별하자. 
+		result.setCommand(command);
 		return result;
 	}
 	
@@ -535,6 +539,7 @@ public class GameRoom
 				}
 			}
 			broadCast("[" + id + "] 가 카드 펼침");
+			command = null;
 			broadCast("[" + guestId + "] 의 턴...\n");
 			
 		}
@@ -653,6 +658,7 @@ public class GameRoom
 				}
 			}
 			broadCast("[" + id + "] 가 카드 펼침");
+			command = null;
 			broadCast("[" + hostId + "] 의 턴...\n");
 		}
 	}
@@ -695,6 +701,7 @@ public class GameRoom
 				plumNum = 0;
 				turn = true;
 				broadCast("[" + id + "] 가 종 울림");
+				command = null;
 				broadCast("[" + id + "] 가 카드 가져감");
 				broadCast("[" + hostId + "] 의 턴...\n");
 			}
@@ -724,6 +731,7 @@ public class GameRoom
 				plumNum = 0;
 				turn = true;
 				broadCast("[" + id + "] 가 종 울림");
+				command = null;
 				broadCast("[" + guestId + "]가 카드 가져감");
 				broadCast("[" + hostId + "] 의 턴...");
 			}
@@ -758,6 +766,7 @@ public class GameRoom
 				plumNum = 0;
 				turn = false;
 				broadCast("[" + id + "] 가 종 울림");
+				command = null;
 				broadCast("[" + guestId + "]가 카드 가져감");
 				broadCast("[" +	guestId + "] 의 턴...\n");
 			}
@@ -787,6 +796,7 @@ public class GameRoom
 				plumNum = 0;
 				turn = false;
 				broadCast("[" + id + "] 가 종 울림");
+				command = null;
 				broadCast("[" + hostId + "]가 카드 가져감");
 				broadCast("[" + guestId + "] 의 턴...\n");
 			}

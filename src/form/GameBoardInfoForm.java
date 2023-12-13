@@ -15,6 +15,7 @@ public class GameBoardInfoForm  implements Serializable
 	private Card DFront = null;
 	private int hostDeckCount;
 	private int guestDeckCount;
+	private String command = null;
 	
 	// 게임 끝났는지 여부, 승자 id 
 	private boolean isGameEnd = false;
@@ -37,9 +38,11 @@ public class GameBoardInfoForm  implements Serializable
 	public Card getDFront() {return this.DFront;}
 	public int getHostDeckCount() {return this.hostDeckCount;}
 	public int getGuestDeckCount() {return this.guestDeckCount;}
+	public String getCommand() {return this.command;}
 	
 	public void setIsGameEnd() {this.isGameEnd = true;}
 	public void setWinnerId(String id) {this.winnerId = id;}
+	public void setCommand(String com) {this.command = com;}
 	
 	
 

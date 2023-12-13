@@ -13,6 +13,7 @@ public class ChatForm implements Serializable
 	private String id = null;
 	private String nickName = null;
 	private String msg = null;
+	private byte[] picBlob = null;
 
 	private GameBoardInfoForm gameBoardInfo = null;
 	
@@ -28,6 +29,7 @@ public class ChatForm implements Serializable
 	}
 	
 	public void setBoardInfo(GameBoardInfoForm info) {this.gameBoardInfo = info;}
+	public void setPicBlob(byte[] blob) {this.picBlob = blob;}
 	
 	public int getReqType() {return this.reqType;}
 	public String getRoomId() {return this.roomId;}
@@ -35,4 +37,5 @@ public class ChatForm implements Serializable
 	public String getNickName() {return this.nickName;}
 	public String getMsg() {return this.msg;}
 	public GameBoardInfoForm getBoardInfo() {return this.gameBoardInfo;}
+	public byte[] getPicBlob() {return this.picBlob;}
 }

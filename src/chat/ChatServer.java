@@ -161,11 +161,13 @@ public class ChatServer
 						if (received.getMsg().equals("flip"))
 						{
 							// 카드 펼치기 요청일 때 
+							ChatServer.games.get(received.getRoomId()).command = "flip";
 							ChatServer.games.get(received.getRoomId()).cardFlip(received.getId());
 						}
 						else if (received.getMsg().equals("ring"))
 						{
 							// 종 울리기 요청일 때 
+							ChatServer.games.get(received.getRoomId()).command = "ring";
 							ChatServer.games.get(received.getRoomId()).ringBell(received.getId());
 						}
 						// ChatServer.games.get(received.getRoomId()).broadCast("게임 보드 정보");
@@ -197,10 +199,18 @@ public class ChatServer
 		private void sendAll(ChatForm toSend)
 		{
 			Set<String> keySet = ChatServer.users.keySet();
-
-			Start.mainMonitor.showChat("[" + toSend.getId() +" # "+ toSend.getNickName() +"]");
-			Start.mainMonitor.showChat(" >> " + toSend.getMsg());
-			Start.mainMonitor.showChat("");
+			if (toSend.getPicBlob() == null)
+			{
+				Start.mainMonitor.showChat("[" + toSend.getId() +" # "+ toSend.getNickName() +"]");
+				Start.mainMonitor.showChat(" >> " + toSend.getMsg());
+				Start.mainMonitor.showChat("");
+			}
+			else if (toSend.getPicBlob() != null)
+			{
+				Start.mainMonitor.showChat("[" + toSend.getId() +" # "+ toSend.getNickName() +"]");
+				Start.mainMonitor.showChat("[사진 전송]");
+				Start.mainMonitor.showChat("");
+			}
 			
 			for (String key : keySet)
 			{
