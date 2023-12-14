@@ -178,7 +178,6 @@ public class GameRoom
 		initGame();
 		broadCast("< 게임이 시작되었습니다! >");
 		broadCast("[" + hostId + "] 의 턴...\n");
-		System.out.println(this.roomName + "방, 방장이름 : " + this.hostId + "에" + this.guestId + "초대됨" );
 	}
 	
 	public void inviteSpector(String id)
@@ -292,7 +291,6 @@ public class GameRoom
 		ChatServer.games.remove(hostId);
 		
 		// 테스트 
-		System.out.println("패자의 ID : " + loserId);
 	}
 	
 	public void gameEndDraw()
@@ -426,7 +424,6 @@ public class GameRoom
 		if (id.equals(hostId) && (turn==true) && (bananaNum != 5) && (limeNum != 5) && (strawberryNum != 5) && (plumNum != 5) && (hostDeck.size() != 0))
 		{
 			// 호스트가 카드 펼쳤을 경우 
-			System.out.println("호스트가 카드 펼침 ");
 			Card hostDeckTopCard = hostDeck.get(0);
 			hostDeck.remove(0);
 			Random random = new Random();
@@ -546,7 +543,6 @@ public class GameRoom
 		else if (id.equals(guestId) && (turn==false) && (bananaNum != 5) && (limeNum != 5) && (strawberryNum != 5) && (plumNum != 5) && (guestDeck.size() != 0))
 		{
 			// 게스트가 카드 펼쳤을 경우 
-			System.out.println("게스트가 카드 펼침 ");
 			Card guestDeckTopCard = guestDeck.get(0);
 			guestDeck.remove(0);
 			Random random = new Random();
@@ -735,7 +731,6 @@ public class GameRoom
 				broadCast("[" + guestId + "]가 카드 가져감");
 				broadCast("[" + hostId + "] 의 턴...");
 			}
-			System.out.println("호스트가 종 울림 ");
 		}
 		else if (id.equals(guestId))
 		{
@@ -800,7 +795,6 @@ public class GameRoom
 				broadCast("[" + hostId + "]가 카드 가져감");
 				broadCast("[" + guestId + "] 의 턴...\n");
 			}
-			System.out.println("게스트가 종 울림 ");
 		}
 		if (isGameEnd())
 		{
